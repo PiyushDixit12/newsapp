@@ -7,5 +7,8 @@ export const routesConstant = {
     },
     getStarted: {
         path: "/getStarted"
+    },
+    signIn: {
+        path: "/login"
     }
 };

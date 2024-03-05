@@ -1,18 +1,38 @@
 /* eslint-disable react/no-unknown-property */
-import {useCallback,useState} from "react"
+import {useCallback,useContext,useState} from "react"
 import userIcon from '../../assets/react.svg'
 import {NavLink} from "react-router-dom";
 import {routesConstant} from "../../routes/routesConstant";
+import {signOut} from "firebase/auth";
+import {auth} from "../../firebase";
+import {userContext} from "../../context/UserContext";
 export const NavBar = () => {
-    const isLogedIn = false;
+    const isLogin = useContext(userContext);
+    // const isLogin = true;
     const [toggle,setToggle] = useState(false);
     const [toggleSlider,setToggleSlider] = useState(false);
+
     const changeToggle = useCallback(() => {
         setToggle(!toggle)
     },[toggle]);
+
+    const handleLogout = useCallback(() => {
+        signOut(auth).then((user) => {
+            if(toggle) {
+                changeToggle();
+            }
+            console.log("user logout is ",user);
+            alert("User Logout Successfully !");
+        }).catch(err => {
+            console.log('error logout is ',err);
+            alert("Error while logout ");
+        })
+    },[changeToggle,toggle]);
+
     const changeToggleSlider = useCallback(() => {
         setToggleSlider(!toggleSlider)
     },[toggleSlider]);
+
     return (
         <>
             <nav className="bg-white border-gray-200 dark:bg-gray-900 ">
@@ -27,7 +47,7 @@ export const NavBar = () => {
                         <button type="button" className="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
                             <span className="sr-only">Open user menu</span>
                             {
-                                isLogedIn ? <img className="w-8 h-8 rounded-full" src={userIcon} alt="user photo" onClick={changeToggle} /> :
+                                isLogin ? <img className="w-8 h-8 rounded-full" src={isLogin.photoURL ? isLogin.photoURL : userIcon} alt="user photo" onClick={changeToggle} /> :
                                     <NavLink
                                         type="button"
                                         to={routesConstant.getStarted.path}
@@ -38,12 +58,15 @@ export const NavBar = () => {
 
                         <div className={`z-50 absolute top-14  right-2 ${toggle ? " visible" : 'hidden'}  my-4 text-base  list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600`} id="user-dropdown">
                             <div className="px-4 py-3">
-                                <span className="block text-sm text-gray-900 dark:text-white">Bonnie Green</span>
-                                <span className="block text-sm  text-gray-500 truncate dark:text-gray-400">name@flowbite.com</span>
+                                <span className="block text-sm text-gray-900 dark:text-white">{isLogin?.displayName}</span>
+                                <span className="block text-sm  text-gray-500 truncate dark:text-gray-400">{isLogin?.email}</span>
                             </div>
                             <ul className="py-2" aria-labelledby="user-menu-button">
                                 <li>
-                                    <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Sign out</a>
+                                    <span
+                                        onClick={handleLogout}
+                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                                    >Sign out</span>
                                 </li>
                             </ul>
                         </div>
