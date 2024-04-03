@@ -10,5 +10,18 @@ export const routesConstant = {
     },
     signIn: {
         path: "/login"
-    }
+    },
+    createNews: {
+        path: "/create-news"
+    },editNews: {
+        path: "/edit-news"
+    },
+    news: {
+        path: "/news"
+    },cards: {
+        path: "/cards"
+    },profile: {
+        path: "/profile"
+    },
+
 };

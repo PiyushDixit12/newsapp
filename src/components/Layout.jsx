@@ -6,7 +6,8 @@ export const Layout = ({children}) => {
     return (
         <div className=" w-screen h-screen">
             <NavBar />
-            {children}
+            <div className="w-full ov">
+                {children}</div>
         </div>
     )
 }

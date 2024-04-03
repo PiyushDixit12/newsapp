@@ -1,75 +1,104 @@
-import {useCallback,useState} from "react"
-import {GithubAuthProvider,GoogleAuthProvider,getRedirectResult,signInWithEmailAndPassword,signInWithRedirect} from 'firebase/auth'
+import {useCallback} from "react"
+import {GoogleAuthProvider,getRedirectResult,signInWithEmailAndPassword,signInWithRedirect} from 'firebase/auth'
 import {auth} from "../../firebase";
 import {NavLink,useNavigate} from "react-router-dom";
 import {routesConstant} from "../../routes/routesConstant";
+import {useFormik} from 'formik';
+import {toast} from "react-toastify";
+import {validationSchema} from "../../schema/AuthSchema";
 
 
 export const Login = () => {
     const navigate = useNavigate();
-    const [email,setEmail] = useState('');
-    const [password,setPassword] = useState('');
-
-    const handleEmailChange = useCallback((e) => {
-        setEmail(e.target.value);
-    },[]);
+    const formik = useFormik({
+        initialValues: {
+            email: '',
+            password: '',
+        },
+        validationSchema,
+        onSubmit: (values) => {
+            // Your existing login logic goes here
+            handleLoginAccount(values.email,values.password);
+        },
+    });
 
     getRedirectResult(auth).then(result => {
         if(result) {
             const credentials = GoogleAuthProvider.credentialFromResult(result);
             console.log("Access Token ",credentials);
             console.log("user after redirect is ",result.user);
+            const user = {
+                uid: result.user.uid,
+                name: result.user.displayName,
+                email: result.user.email,
+                photo: result.user.photoURL
+            };
+            localStorage.setItem("user",JSON.stringify(user));
+
             navigate(routesConstant.home.path);
         }
     });
 
-    getRedirectResult(auth).then(result => {
-        if(result) {
-            const gitHubCredentials = GithubAuthProvider.credentialFromResult(result);
-            console.log("Facebook credential ",gitHubCredentials);
-            console.log("user after redirect is ",result.user);
-            navigate(routesConstant.home.path);
-        }
-    });
+    // getRedirectResult(auth).then(result => {
+    //     if(result) {
+    //         const gitHubCredentials = GithubAuthProvider.credentialFromResult(result);
+    //         console.log("Facebook credential ",gitHubCredentials);
+    //         console.log("user after redirect is ",result.user);
+    //         navigate(routesConstant.home.path);
+    //     }
+    // });
 
-    const handlePasswordChange = useCallback((e) => {
-        setPassword(e.target.value);
-    },[]);
 
     const handleLoginWithGoogle = useCallback(async () => {
         const provider = new GoogleAuthProvider();
-        signInWithRedirect(auth,provider).then(() => {
-            console.log("redirect success !");
-            navigate(routesConstant.home.path);
-        });
-    },[navigate]);
-
-    const handleLoginWithGithub = useCallback(() => {
-        const provider = new GithubAuthProvider();
-        signInWithRedirect(auth,provider).then(() => {
-            console.log("redirect success !");
+        signInWithRedirect(auth,provider).then((user) => {
+            console.log("redirect success !",user);
+            const localUser = {
+                uid: user.uid,
+                name: user.displayName,
+                email: user.email,
+                photo: user.photoURL
+            };
+            localStorage.setItem("user",JSON.stringify(localUser));
             navigate(routesConstant.home.path);
         }).catch(err => {
-            console.log("Error in login with github ",err);
+            console.log("error on google",err);
+            toast.error("Something went wrong !");
         });
     },[navigate]);
 
-    const handleLoginAccount = useCallback(() => {
+    // const handleLoginWithGithub = useCallback(() => {
+    //     const provider = new GithubAuthProvider();
+    //     signInWithRedirect(auth,provider).then(() => {
+    //         console.log("redirect success !");
+    //         toast.success("User Login Successfully ! ");
+    //         navigate(routesConstant.home.path);
+    //     }).catch(err => {
+    //         console.log("Error in login with github ",err);
+    //         toast.error("User Already Present ! ");
+    //     });
+    // },[navigate]);
+
+    const handleLoginAccount = useCallback((email,password) => {
         signInWithEmailAndPassword(auth,email,password).then(user => {
             console.log("User is ",user);
-            alert("User Login Successfully !");
+            localStorage.setItem("user",JSON.stringify(user));
+            toast.success("User Login Successfully !");
             navigate(routesConstant.home.path);
         }).catch(err => {
-            console.log("Error While creating User ",err)
+            console.log("Error While creating User ",err);
+            const message = err.message;
+            console.log(message)
+            toast.error("Invalid Credentials !");
         })
-    },[email,navigate,password]);
+    },[navigate]);
 
     return (
         <section className="bg-gray-50 dark:bg-gray-900">
             <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto h-screen lg:py-0">
                 <a href="#" className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
                     {/* <img className="w-8 h-8 mr-2" src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg" alt="logo" /> */}
-                    Book <span className=" text-primary-400 inline-block ms-2"> Store</span>
+                    News <span className=" text-primary-400 inline-block ms-2"> Store</span>
                 </a>
                 <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
                     <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
@@ -86,8 +115,13 @@ export const Login = () => {
                                     className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-400"
                                     placeholder="Your Email"
                                     required
-                                    onChange={handleEmailChange}
+                                    value={formik.values.email}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
                                 />
+                                {formik.touched.email && formik.errors.email && (
+                                    <div className="text-red-500 text-sm">{formik.errors.email}</div>
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
@@ -98,8 +132,13 @@ export const Login = () => {
                                     placeholder="Your Password"
                                     className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                     required
-                                    onChange={handlePasswordChange}
+                                    value={formik.values.password}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
                                 />
+                                {formik.touched.password && formik.errors.password && (
+                                    <div className="text-red-500 text-sm">{formik.errors.password}</div>
+                                )}
                             </div>
                             {/* <div>
                                 <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
@@ -118,7 +157,7 @@ export const Login = () => {
                                 // type="submit"
                                 type="button"
                                 className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-                                onClick={handleLoginAccount}
+                                onClick={formik.handleSubmit}
                             >Login</button>
 
                             <p className="text-sm font-light text-gray-500 dark:text-gray-400">
@@ -128,14 +167,14 @@ export const Login = () => {
                                 <div className=" mb-6 w-full relative"> <div className=" w-full border-dashed border-gray-700 border-b-2 h-3"></div>
                                     <div className=" absolute items-center justify-center top-0 left-1/2 -translate-x-1/2"><span className=" rounded-full w-full text-white  text-xs bg-gray-700 p-2">OR</span> </div>
                                 </div>
-                                <div
-                                    className=" w-full text-white  bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 "
+                                {/* <div
+                                    className=" w-full text-white  cursor-pointer bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 "
                                     onClick={handleLoginWithGithub}
                                 >
                                     Login With Github
-                                </div>
+                                </div> */}
                                 <div
-                                    className=" w-full my-3 text-white  bg-gray-700 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-800 "
+                                    className=" w-full my-3 text-white cursor-pointer  bg-gray-700 hover:bg-gray-600 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-800 "
                                     onClick={handleLoginWithGoogle}
                                 >
                                     Login With Google

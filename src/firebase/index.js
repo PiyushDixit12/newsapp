@@ -1,7 +1,9 @@
 import {initializeApp} from "firebase/app";
 import {getAuth} from "firebase/auth";
+import {getStorage} from 'firebase/storage'
 import {getDatabase} from 'firebase/database'
-
+import {getFirestore} from 'firebase/firestore'
+import {getMessaging} from 'firebase/messaging'
 const firebaseConfig = {
     apiKey: "AIzaSyBrLigsp38sImUz-5iAZDxZffa90agJGCU",
     authDomain: "bookstore-tailwind-march-24.firebaseapp.com",
@@ -17,3 +19,6 @@ export const app = initializeApp(firebaseConfig);
 export const appDataBase = getDatabase(app);
 
 export const auth = getAuth(app);
+export const DB = getFirestore(app);
+export const IMAGE_DB = getStorage(app);
+export const messaging = getMessaging(app);

@@ -1,13 +1,16 @@
 /* eslint-disable react/no-unknown-property */
-import {useCallback,useContext,useState} from "react"
+import {useCallback,useState} from "react"
 import userIcon from '../../assets/react.svg'
 import {NavLink} from "react-router-dom";
 import {routesConstant} from "../../routes/routesConstant";
 import {signOut} from "firebase/auth";
 import {auth} from "../../firebase";
-import {userContext} from "../../context/UserContext";
+import {toast} from "react-toastify";
+import {useSelector} from "react-redux";
 export const NavBar = () => {
-    const isLogin = useContext(userContext);
+    // const isLogin = useContext(userContext);
+    const isLogin = useSelector(selector => selector.userInfo);
+    console.log(isLogin)
     // const isLogin = true;
     const [toggle,setToggle] = useState(false);
     const [toggleSlider,setToggleSlider] = useState(false);
@@ -21,11 +24,12 @@ export const NavBar = () => {
             if(toggle) {
                 changeToggle();
             }
+            localStorage.clear()
             console.log("user logout is ",user);
-            alert("User Logout Successfully !");
+            toast.success("User Logout Successfully !");
         }).catch(err => {
             console.log('error logout is ',err);
-            alert("Error while logout ");
+            toast.error("Something Went Wrong While Logout ");
         })
     },[changeToggle,toggle]);
 
@@ -39,7 +43,7 @@ export const NavBar = () => {
                 <div className="max-w-screen-xl relative flex flex-wrap items-center justify-between mx-auto p-4">
                     <a href="/" className="flex items-center space-x-3 rtl:space-x-reverse">
 
-                        <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">Book <span className=" text-blue-700">Store</span> </span>
+                        <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">News <span className=" text-blue-700">Store</span> </span>
                     </a>
 
                     <div className="flex items-center md:order-2 space-x-3 md:space-x-0  rtl:space-x-reverse">
@@ -47,7 +51,7 @@ export const NavBar = () => {
                         <button type="button" className="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown" data-dropdown-placement="bottom">
                             <span className="sr-only">Open user menu</span>
                             {
-                                isLogin ? <img className="w-8 h-8 rounded-full" src={isLogin.photoURL ? isLogin.photoURL : userIcon} alt="user photo" onClick={changeToggle} /> :
+                                isLogin ? <img className="w-8 h-8 rounded-full" src={isLogin.photo ? isLogin.photo : userIcon} alt="user photo" onClick={changeToggle} /> :
                                     <NavLink
                                         type="button"
                                         to={routesConstant.getStarted.path}
@@ -58,14 +62,21 @@ export const NavBar = () => {
 
                         <div className={`z-50 absolute top-14  right-2 ${toggle ? " visible" : 'hidden'}  my-4 text-base  list-none bg-white divide-y divide-gray-100 rounded-lg shadow dark:bg-gray-700 dark:divide-gray-600`} id="user-dropdown">
                             <div className="px-4 py-3">
-                                <span className="block text-sm text-gray-900 dark:text-white">{isLogin?.displayName}</span>
+                                <span className="block text-sm text-gray-900 dark:text-white">{isLogin?.name}</span>
                                 <span className="block text-sm  text-gray-500 truncate dark:text-gray-400">{isLogin?.email}</span>
                             </div>
                             <ul className="py-2" aria-labelledby="user-menu-button">
+                                <li> <NavLink to={routesConstant.createNews.path}> <span
+                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                                >Create News</span></NavLink></li>
+                                <li> <NavLink to={routesConstant.profile.path + "/" + isLogin?.uid}> <span
+                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                                >Profile</span></NavLink></li>
                                 <li>
+
                                     <span
                                         onClick={handleLogout}
-                                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                                        className="block  cursor-pointer px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
                                     >Sign out</span>
                                 </li>
                             </ul>
@@ -81,13 +92,13 @@ export const NavBar = () => {
                     <div className={`items-center justify-between ${toggleSlider ? "visible" : "hidden"} w-full md:flex md:w-auto md:order-1`} id="navbar-user">
                         <ul className="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
                             <li>
-                                <a href="#" className="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500" aria-current="page">Home</a>
+                                <NavLink to={routesConstant.home.path} defaultChecked className="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent  md:text-white md:p-0 md:hover:text-blue-700" aria-current="page">Home</NavLink>
                             </li>
                             <li>
-                                <a href="#" className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Books</a>
+                                <NavLink to={routesConstant.news.path} className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">News</NavLink>
                             </li>
                             <li>
-                                <a href="#" className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Cards</a>
+                                <NavLink to={routesConstant.cards.path} className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">Cards</NavLink>
                             </li>
 
                         </ul>
