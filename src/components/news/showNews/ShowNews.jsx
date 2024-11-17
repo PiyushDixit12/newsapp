@@ -1,7 +1,7 @@
 import {useEffect,useState} from "react";
 import {fetchNews} from "../../../services/getNews"
 import {NewsCard} from "../newsCard/NewsCard";
-import {Loader} from "../../components/loader";
+import {Loader} from "../../components/Loader";
 import {useSelector} from "react-redux";
 
 export const ShowNews = () => {
